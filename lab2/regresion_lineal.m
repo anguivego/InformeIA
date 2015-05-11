@@ -1,34 +1,78 @@
-
-%reset workspace
+close all
 clear all
-plot_variance = @(x,lower,upper) set(fill([x,x(end:-1:1)],[upper,lower(end:-1:1)],color));
+s = RandStream.create('mt19937ar','seed',1e1);
+%RandStream.setDefaultStream(s); % Version MATLAB 2010
+RandStream.setGlobalStream(s); % Version MATLAB 2013
+
 data=load('ejemplo_regresion.mat');
 xNtot=data.x;
 yNtot=data.y;
 tNtot=data.t;
 
+
+tipofb='tan';
+
 Ntot=size(xNtot,1);
-N=100;
+N=Ntot/5;
 index=randperm(Ntot);
-t=tNtot(index(1:N));
-x=xNtot(index(1:N));
-tipofb='exp';
-M=30;
-ttest = tNtot(index(N+1:end));
-xtest = xNtot(index(N+1:end));
 
-PHI=genBasisFunction(tipofb,x,N,M);
-plot(x, PHI,'+','MarkerSize',2);
+B_test=[];
+Mean_aux=[];
+std_aux=[];
+Mean_result=[];
+std_result=[];
 
-[alpha,betae]=findAlphaBeta(PHI,M,N,t);
+for j=1:4
+    Mean_aux=[];
+    std_aux=[];
+    for M=10:10:100
+        B_test=[];
+        for i=1:5
+            t=tNtot(index(1:j*N));
+            x=xNtot(index(1:j*N));
+            ttest=tNtot(index(j*N+1:end));
+            xtest=xNtot(index(j*N+1:end));
+           
+            [Wml,B]=RLMV(x,t,M,xtest,ttest,tipofb);
+            B_test=[B_test B];
+            tNtot=[tNtot(index(j*N+1:end)); tNtot(index(1:j*N))];
+            xNtot=[xNtot(index(j*N+1:end)); xNtot(index(1:j*N))];            
+        end
+        Mean_aux=[Mean_aux mean(B_test)];
+            std_aux=[std_aux std(B_test)];
+    end
+    Mean_result=[Mean_result;Mean_aux];
+    std_result=[std_result;std_aux];
+end
+M=10;
+Mean_result=Mean_result';
+strdata=[]; 
+disp('|M\N| 40        | 80           | 120  |160|')
+disp('|:--:| :-------------: |:-------------:| :-----:| :-----:|')
+for i=1:size(Mean_result,1)
+    strdata=[strdata '|' num2str(M)];
+    for j=1:size(Mean_result,2)
+        strdata=[strdata '|' num2str(Mean_result(i,j))];
+    end
+    M=M+10;
+    strdata=[strdata '|'];
+    disp(strdata);
+    strdata=[];
+end
+M=10
+disp('|M\N| 40        | 80           | 120  |160|')
+disp('|:--:| :-------------: |:-------------:| :-----:| :-----:|')
+std_result=std_result';
+strdata=[]; 
+for i=1:size(std_result,1)
+    strdata=[strdata '|' num2str(M)];
+    for j=1:size(std_result,2)
+        strdata=[strdata '|' num2str(std_result(i,j))];
+    end
+    M=M+10;
+    strdata=[strdata '|'];
+    disp(strdata);
+    strdata=[];
+end
 
-PHIt = genBasisFunction(tipofb,xNtot,Ntot,M);
-SnInv = alpha*(length(x)) + betae*(PHI'*PHI);
-Sn = SnInv\eye(M);
-mn = betae*(Sn*PHI'*t);
-mean_pre=PHIt*mn;
-varianza=inv(betae*eye(length(xNtot)))+PHIt*Sn*PHIt';
-varianza=diag(sqrt(varianza'));
-plot_variance(xNtot',(mean_pre-2*varianza)',(mean_pre+2*varianza)',[1 0.1 0.1]);
-set(gca, 'ylim', [-1.5 1.5])
-
+%reset workspace
