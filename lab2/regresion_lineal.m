@@ -21,7 +21,9 @@ Mean_aux=[];
 std_aux=[];
 Mean_result=[];
 std_result=[];
-
+min_error=inf;
+max_error=0;
+W_min=[];
 for j=1:4
     Mean_aux=[];
     std_aux=[];
@@ -34,12 +36,29 @@ for j=1:4
             xtest=xNtot(index(j*N+1:end));
            
             [Wml,B]=RLMV(x,t,M,xtest,ttest,tipofb);
+            
             B_test=[B_test B];
             tNtot=[tNtot(index(j*N+1:end)); tNtot(index(1:j*N))];
             xNtot=[xNtot(index(j*N+1:end)); xNtot(index(1:j*N))];            
         end
         Mean_aux=[Mean_aux mean(B_test)];
-            std_aux=[std_aux std(B_test)];
+        std_aux=[std_aux std(B_test)];
+        
+        
+        if mean(B_test)>max_error
+            max_error=mean(B_test);
+            W_max=Wml;
+            M_max=M;
+            N_max=N*j;
+        end
+        
+        if mean(B_test)<min_error
+            min_error=mean(B_test);
+            W_min=Wml;
+             M_min=M;
+             N_min=N*j;
+        end
+        
     end
     Mean_result=[Mean_result;Mean_aux];
     std_result=[std_result;std_aux];
@@ -74,5 +93,5 @@ for i=1:size(std_result,1)
     disp(strdata);
     strdata=[];
 end
-
-%reset workspace
+filename=[tipofb '_W.mat'];
+save(filename,'W_max','W_min','M_max','M_min','N_max','N_min');
