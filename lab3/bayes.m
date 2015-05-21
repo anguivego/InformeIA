@@ -43,3 +43,6 @@ for i=1:5
     T2=[T2(index(4*N+1:end),:); T2(index(1:4*N),:)];
     T3=[T3(index(4*N+1:end),:); T3(index(1:4*N),:)];
 end
+
+mean(acc)
+std(acc)
