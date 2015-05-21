@@ -1,5 +1,4 @@
-function accurr=acurracy(W,x,t)
-    Y=x*W;
+function accurr=acurracy(Y,t)
     Y_b=zeros(size(Y));
     N=length(t);
     true_positive=0;
